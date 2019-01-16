@@ -23,7 +23,7 @@ public:
 	void EndSession();             // session has ended
 
 	// GAME OUTPUT
-	long WantsTelemetryUpdates() { return(1); } // CHANGE TO 1 TO ENABLE TELEMETRY EXAMPLE!
+	long WantsTelemetryUpdates() { return(2); } // CHANGE TO 1 TO ENABLE TELEMETRY EXAMPLE!
 	void UpdateTelemetry(const TelemInfoV01 &info);
 
 	bool WantsGraphicsUpdates() { return(false); } // CHANGE TO TRUE TO ENABLE GRAPHICS EXAMPLE!

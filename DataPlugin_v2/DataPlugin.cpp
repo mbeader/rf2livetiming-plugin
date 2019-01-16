@@ -211,6 +211,7 @@ void DataPlugin::UpdateScoring(const ScoringInfoV01 &info)
 	// event data (changes continuously)
 	StreamData((char *)&info.mCurrentET, sizeof(double));
 	StreamData((char *)&info.mEndET, sizeof(double));
+	StreamData((char *)&info.mMaxLaps, sizeof(long));
 	StreamData((char *)&info.mLapDist, sizeof(double));
 	StreamData((char *)&info.mNumVehicles, sizeof(long));
 

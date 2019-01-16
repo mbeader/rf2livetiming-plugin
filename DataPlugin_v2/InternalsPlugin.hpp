@@ -612,7 +612,7 @@ class InternalsPlugin : public PluginObject
   virtual void UpdateScoring( const ScoringInfoV01 &info ) {}  // update plugin with scoring info (approximately five times per second)
 
   // GAME OUTPUT
-  virtual long WantsTelemetryUpdates() { return( 0 ); }        // whether we want telemetry updates (0=no 1=player-only 2=all vehicles)
+  virtual long WantsTelemetryUpdates() { return( 2 ); }        // whether we want telemetry updates (0=no 1=player-only 2=all vehicles)
   virtual void UpdateTelemetry( const TelemInfoV01 &info ) {}  // update plugin with telemetry info
 
   virtual bool WantsGraphicsUpdates() { return( false ); }     // whether we want graphics updates
