@@ -253,6 +253,7 @@ void DataPlugin::UpdateScoring(const ScoringInfoV01 &info)
 		StreamData((char *)&vinfo.mLapsBehindNext, sizeof(long));
 		StreamData((char *)&vinfo.mNumPitstops, sizeof(short));
 		StreamData((char *)&vinfo.mNumPenalties, sizeof(short));
+		StreamData((char *)&vinfo.mControl, sizeof(char));
 		StreamData((char *)&vinfo.mInPits, sizeof(bool));
 		StreamData((char *)&vinfo.mSector, sizeof(char));
 		StreamData((char *)&vinfo.mFinishStatus, sizeof(char));
