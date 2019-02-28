@@ -1,8 +1,11 @@
 #pragma once
 
+#ifndef _LIVE_TIMING_DATA_HPP_
+#define _LIVE_TIMING_DATA_HPP_
+
 #include "InternalsPlugin.hpp"
 
-class DataPlugin : public InternalsPluginV06
+class DataPlugin : public InternalsPluginV07
 {
 public:
 	DataPlugin();
@@ -23,7 +26,7 @@ public:
 	void EndSession();             // session has ended
 
 	// GAME OUTPUT
-	long WantsTelemetryUpdates() { return(2); } // CHANGE TO 1 TO ENABLE TELEMETRY EXAMPLE!
+	long WantsTelemetryUpdates() { return(0); } // CHANGE TO 1 TO ENABLE TELEMETRY EXAMPLE!
 	void UpdateTelemetry(const TelemInfoV01 &info);
 
 	bool WantsGraphicsUpdates() { return(false); } // CHANGE TO TRUE TO ENABLE GRAPHICS EXAMPLE!
@@ -96,3 +99,4 @@ private:
 	int port;
 };
 
+#endif

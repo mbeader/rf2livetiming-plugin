@@ -35,7 +35,7 @@ extern "C" __declspec(dllexport)
 PluginObjectType __cdecl GetPluginType()               { return(PO_INTERNALS); }
 
 extern "C" __declspec(dllexport)
-int __cdecl GetPluginVersion()                         { return(6); }
+int __cdecl GetPluginVersion()                         { return(7); }
 
 extern "C" __declspec(dllexport)
 PluginObject * __cdecl CreatePluginObject()            { return((PluginObject *) new DataPlugin); }
@@ -203,6 +203,13 @@ void DataPlugin::UpdateScoring(const ScoringInfoV01 &info)
 	//log("starting update");
 	StartStream();
 	StreamData((char *)&type_scoring, sizeof(char));
+
+	// multiplayer data
+	StreamData((char *)&info.mServerPublicIP, sizeof(long));
+	StreamData((char *)&info.mServerPort, sizeof(short));
+	StreamString((char *)&info.mServerName, 32);
+	StreamData((char *)&info.mMaxPlayers, sizeof(long));
+	StreamData((char *)&info.mStartET, sizeof(float));
 
 	// session data (changes mostly with changing sessions)
 	StreamString((char *)&info.mTrackName, 64);
