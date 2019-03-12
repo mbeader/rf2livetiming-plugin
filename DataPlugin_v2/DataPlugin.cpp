@@ -4,7 +4,6 @@
 
 #include "DataPlugin.hpp"          // corresponding header file
 #include <math.h>               // for atan2, sqrt
-#include <stdio.h>              // for sample output
 #include <assert.h>
 #include <io.h>
 #include <sys/stat.h>
@@ -17,6 +16,7 @@
 
 #define TIME_LENGTH 26
 #define MAX_PACKET_LEN 32768
+#define TCP_PACKET_LEN 512
 
 
 DataPlugin::DataPlugin()
@@ -141,25 +141,21 @@ void DataPlugin::Startup(long version)
 	memset((char *)&udp_sad, 0, sizeof(udp_sad)); /* clear sockaddr structure */
 	udp_sad.sin_family = AF_INET;           /* set family to Internet     */
 	udp_sad.sin_port = htons((u_short)port);
-	log("1");
+	
 	if(send_results) {
 		tcp_s = socket(PF_INET, SOCK_STREAM, 0);
 		if(tcp_s < 0) {
 			log("could not create stream socket");
 			return;
 		}
-		log("2");
 		if(localhost)
 			errcode = getaddrinfo("localhost", NULL, &tcp_hints, &tcp_pResult);
 		else
 			errcode = getaddrinfo(iniip, NULL, &tcp_hints, &tcp_pResult);
-		log("3");
 		memset((char *)&tcp_sad, 0, sizeof(tcp_sad)); /* clear sockaddr structure */
-		log("4");
 		tcp_sad.sin_family = AF_INET;           /* set family to Internet     */
 		tcp_sad.sin_port = htons((u_short)port);
 		tcp_sad.sin_addr.S_un.S_addr = *((ULONG*)&(((sockaddr_in*)tcp_pResult->ai_addr)->sin_addr));
-		log("5");
 	}
 
 
@@ -167,9 +163,6 @@ void DataPlugin::Startup(long version)
 	//memcpy(&sad.sin_addr, ptrh->h_addr, ptrh->h_length);
 
 	udp_sad.sin_addr.S_un.S_addr = *((ULONG*)&(((sockaddr_in*)udp_pResult->ai_addr)->sin_addr));
-
-	log("6");
-
 }
 
 
@@ -212,33 +205,22 @@ void DataPlugin::ExitRealtime()
 
 void DataPlugin::StartSession()
 {
-	log("7");
-	char s[17];
 	time_t curr;
 	time(&curr);
 	time_t results_time;
-	log("8");
 	char results_filename[29];
+
 	if(last_check) {
 		FindNewResult(results_filename);
 		if(results_filename[0]) {
 			results_time = ParseResultsTime(results_filename);
-			sprintf_s(s, 17, "%lld", results_time);
-			log(s);
 			if(results_time > last_check)
 				ReadResults(results_filename);
 			else
 				log("old result");
 		}
-		//connect(tcp_s, (struct sockaddr *) &tcp_sad, sizeof(struct sockaddr));
-	} else {
-		;
 	}
 	last_check = curr;
-	sprintf_s(s, 17, "%lld", last_check);
-	log("9");
-	log(s);
-	log("10");
 }
 
 
@@ -469,16 +451,13 @@ void DataPlugin::EndStream() {
 void DataPlugin::FindNewResult(char *name) {
 	WIN32_FIND_DATA data;
 	HANDLE hand = FindFirstFile(".\\UserData\\Log\\Results\\*.xml", &data);
-	//char resultsfile[29];
 
 	if(hand != INVALID_HANDLE_VALUE) {
 		do {
-			//log(data.cFileName);
 			strncpy_s(name, 29, (const char *) &data.cFileName, 29);
 		} while(FindNextFile(hand, &data));
 		FindClose(hand);
 	}
-	log(name);
 }
 
 /*void DataPlugin::FindNewResults() {
@@ -506,16 +485,36 @@ time_t DataPlugin::ParseResultsTime(char *name) {
 
 void DataPlugin::ReadResults(char *name) {
 	FILE *r;
-	char buf[512];
 	char path[52];
-	size_t nread;
 	strncpy_s(path, 52, ".\\UserData\\Log\\Results\\0000_00_00_00_00_00-00R1.xml", 52);
 	strncpy_s(path+23, 29, name, 29);
-	log(path);
 	if(fopen_s(&r, path, "rb") == 0) {
-		nread = fread(buf, sizeof(char), 512, r);
-		//log(buf);
+		if(SendResults(&r))
+			log("failed to send results file");
 		fclose(r);
 	} else
 		log("cannot open results file");
+}
+
+int DataPlugin::SendResults(FILE** r) {
+	char buf[TCP_PACKET_LEN];
+	size_t nread;
+	int nsent;
+
+	if(connect(tcp_s, (struct sockaddr *) &tcp_sad, sizeof(struct sockaddr)))
+		return -1;
+	log("connection successful");
+	while((nread = fread(buf, sizeof(char), TCP_PACKET_LEN, *r)) > 0) {
+		nsent = send(tcp_s, buf, (int) nread, 0);
+		if(nsent < 0)
+			return -2;
+		if(nsent < nread)
+			log("did not send all bytes");
+		log("sent packet");
+	}
+
+	shutdown(tcp_s, SD_BOTH);
+	closesocket(tcp_s);
+	tcp_s = socket(PF_INET, SOCK_STREAM, 0);
+	return 0;
 }
