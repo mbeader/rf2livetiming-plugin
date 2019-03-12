@@ -226,7 +226,7 @@ void DataPlugin::StartSession()
 			sprintf_s(s, 17, "%lld", results_time);
 			log(s);
 			if(results_time > last_check)
-				log("new result");
+				ReadResults(results_filename);
 			else
 				log("old result");
 		}
@@ -495,7 +495,6 @@ void DataPlugin::FindNewResult(char *name) {
 
 time_t DataPlugin::ParseResultsTime(char *name) {
 	struct tm t;
-	char s[9];
 	t.tm_year = atoi(name) - 1900;
 	t.tm_mon = atoi(name + 5) - 1;
 	t.tm_mday = atoi(name + 8);
@@ -503,4 +502,20 @@ time_t DataPlugin::ParseResultsTime(char *name) {
 	t.tm_min = atoi(name + 14);
 	t.tm_sec = atoi(name + 17);
 	return mktime(&t);
+}
+
+void DataPlugin::ReadResults(char *name) {
+	FILE *r;
+	char buf[512];
+	char path[52];
+	size_t nread;
+	strncpy_s(path, 52, ".\\UserData\\Log\\Results\\0000_00_00_00_00_00-00R1.xml", 52);
+	strncpy_s(path+23, 29, name, 29);
+	log(path);
+	if(fopen_s(&r, path, "rb") == 0) {
+		nread = fread(buf, sizeof(char), 512, r);
+		//log(buf);
+		fclose(r);
+	} else
+		log("cannot open results file");
 }
