@@ -88,8 +88,13 @@ private:
 	void EndStream();
 	void log(const char *msg);
 
-	SOCKET s; // socket to send data to
-	struct sockaddr_in sad;
+	void FindNewResult(char *name);
+	time_t ParseResultsTime(char *name);
+
+	SOCKET udp_s; // socket to send data to
+	struct sockaddr_in udp_sad;
+	SOCKET tcp_s;
+	struct sockaddr_in tcp_sad;
 	char data[32768];
 	int data_offset;
 	byte data_version;
@@ -97,6 +102,7 @@ private:
 	short data_sequence;
 	char hostname[256];
 	int port;
+	time_t last_check;
 };
 
 #endif

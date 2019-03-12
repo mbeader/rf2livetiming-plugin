@@ -18,6 +18,7 @@
 #define TIME_LENGTH 26
 #define MAX_PACKET_LEN 32768
 
+
 DataPlugin::DataPlugin()
 {
 }
@@ -70,95 +71,117 @@ void DataPlugin::Startup(long version)
 	FILE *settings;
 	//struct hostent *ptrh;
 	data_version = 1;
+	last_check = 0;
 	char portstring[10];
 	char iniip[16];
 	int localhost;
+	int send_results;
 	int errcode;
 
-	ADDRINFO hints = { sizeof(addrinfo) };
-	hints.ai_flags = AI_ALL;
-	hints.ai_family = PF_INET;
-	hints.ai_protocol = IPPROTO_IPV4;
-	ADDRINFO *pResult = NULL;
+	ADDRINFO udp_hints = { sizeof(addrinfo) };
+	udp_hints.ai_flags = AI_ALL;
+	udp_hints.ai_family = PF_INET;
+	udp_hints.ai_protocol = IPPROTO_IPV4;
+	ADDRINFO *udp_pResult = NULL;
+
+	ADDRINFO tcp_hints = { sizeof(addrinfo) };
+	tcp_hints.ai_flags = AI_ALL;
+	tcp_hints.ai_family = PF_INET;
+	tcp_hints.ai_protocol = IPPROTO_IPV4;
+	ADDRINFO *tcp_pResult = NULL;
 
 	log("starting plugin");
 
 	// open socket
-	s = socket(PF_INET, SOCK_DGRAM, 0);
-	if (s < 0) {
+	udp_s = socket(PF_INET, SOCK_DGRAM, 0);
+	if(udp_s < 0) {
 		log("could not create datagram socket");
 		return;
 	}
 	int err = fopen_s(&settings, "rf2livetiming.ini", "r");
 	//err = 1;
-	if (err == 0) {
+	if(err == 0) {
 		log("reading settings");
-		/*if (fscanf_s(settings, "%[^:]:%i", hostname, _countof(hostname), &port) != 2) {
-			log("could not read host and port");
-		}
-		//ptrh = gethostbyname(hostname);
-		log("settings read from file");
-		int errcode = getaddrinfo(hostname, NULL, &hints, &pResult);
-		*/
-		if (fscanf_s(settings, "USE LOCALHOST=\"%i\"\n", &localhost) != 1) {
+		if(fscanf_s(settings, "USE LOCALHOST=\"%i\"\n", &localhost) != 1) {
 			log("could not read localhost flag, using default: 1");
 			localhost = 1;
 		} else if (localhost)
 			log("localhost");
-		if (fscanf_s(settings, "DEST IP=\"%[^\"]\"\n", iniip, _countof(iniip)) != 1) {
+		if(fscanf_s(settings, "DEST IP=\"%[^\"]\"\n", iniip, _countof(iniip)) != 1) {
 			if(localhost)
 				log("could not read IP, but using localhost");
 			else
 				log("could not read IP, using default: 127.0.0.1");
 		} else if(!localhost)
 			log(iniip);
-		if (fscanf_s(settings, "DEST PORT=\"%i\"", &port) != 1) {
+		if(fscanf_s(settings, "DEST PORT=\"%i\"\n", &port) != 1) {
 			log("could not read port, using default: 6789");
 			port = 6789;
 		} else {
 			sprintf_s(portstring, "%i", port);
 			log(portstring);
 		}
+		if(fscanf_s(settings, "SEND RESULTS=\"%i\"", &send_results) != 1) {
+			log("could not read send results flag, using default: 1");
+			send_results = 1;
+		} else if(send_results)
+			log("Will send results files");
 		fclose(settings);
 		
 		if(localhost)
-			errcode = getaddrinfo("localhost", NULL, &hints, &pResult);
+			errcode = getaddrinfo("localhost", NULL, &udp_hints, &udp_pResult);
 		else
-			errcode = getaddrinfo(iniip, NULL, &hints, &pResult);
+			errcode = getaddrinfo(iniip, NULL, &udp_hints, &udp_pResult);
 	}
 	else {
 		log("could not read settings, using defaults: localhost:6789");
-		//ptrh = gethostbyname("localhost"); /* Convert host name to equivalent IP address and copy to sad. */
-
-		errcode = getaddrinfo("localhost", NULL, &hints, &pResult);
-
-
+		errcode = getaddrinfo("localhost", NULL, &udp_hints, &udp_pResult);
 		port = 6789;
 	}
-	memset((char *)&sad, 0, sizeof(sad)); /* clear sockaddr structure */
-	sad.sin_family = AF_INET;           /* set family to Internet     */
-	sad.sin_port = htons((u_short)port);
-	//if (((char *)ptrh) == NULL) {
-	//	log("invalid host name");
-	//	return;
-	//}
-
+	memset((char *)&udp_sad, 0, sizeof(udp_sad)); /* clear sockaddr structure */
+	udp_sad.sin_family = AF_INET;           /* set family to Internet     */
+	udp_sad.sin_port = htons((u_short)port);
+	log("1");
+	if(send_results) {
+		tcp_s = socket(PF_INET, SOCK_STREAM, 0);
+		if(tcp_s < 0) {
+			log("could not create stream socket");
+			return;
+		}
+		log("2");
+		if(localhost)
+			errcode = getaddrinfo("localhost", NULL, &tcp_hints, &tcp_pResult);
+		else
+			errcode = getaddrinfo(iniip, NULL, &tcp_hints, &tcp_pResult);
+		log("3");
+		memset((char *)&tcp_sad, 0, sizeof(tcp_sad)); /* clear sockaddr structure */
+		log("4");
+		tcp_sad.sin_family = AF_INET;           /* set family to Internet     */
+		tcp_sad.sin_port = htons((u_short)port);
+		tcp_sad.sin_addr.S_un.S_addr = *((ULONG*)&(((sockaddr_in*)tcp_pResult->ai_addr)->sin_addr));
+		log("5");
+	}
 
 
 	//memcpy(&sad.sin_addr, ptrh->h_addr, ptrh->h_length);
 	//memcpy(&sad.sin_addr, ptrh->h_addr, ptrh->h_length);
 
-	sad.sin_addr.S_un.S_addr = *((ULONG*)&(((sockaddr_in*)pResult->ai_addr)->sin_addr));
+	udp_sad.sin_addr.S_un.S_addr = *((ULONG*)&(((sockaddr_in*)udp_pResult->ai_addr)->sin_addr));
 
+	log("6");
 
 }
 
 
 void DataPlugin::Shutdown()
 {
-	if (s > 0) {
-		closesocket(s);
-		s = 0;
+	if(udp_s > 0) {
+		closesocket(udp_s);
+		udp_s = 0;
+	}
+	if(tcp_s > 0) {
+		closesocket(tcp_s);
+		tcp_s = 0;
 	}
 }
 
@@ -189,6 +212,33 @@ void DataPlugin::ExitRealtime()
 
 void DataPlugin::StartSession()
 {
+	log("7");
+	char s[17];
+	time_t curr;
+	time(&curr);
+	time_t results_time;
+	log("8");
+	char results_filename[29];
+	if(last_check) {
+		FindNewResult(results_filename);
+		if(results_filename[0]) {
+			results_time = ParseResultsTime(results_filename);
+			sprintf_s(s, 17, "%lld", results_time);
+			log(s);
+			if(results_time > last_check)
+				log("new result");
+			else
+				log("old result");
+		}
+		//connect(tcp_s, (struct sockaddr *) &tcp_sad, sizeof(struct sockaddr));
+	} else {
+		;
+	}
+	last_check = curr;
+	sprintf_s(s, 17, "%lld", last_check);
+	log("9");
+	log(s);
+	log("10");
 }
 
 
@@ -231,7 +281,7 @@ void DataPlugin::UpdateScoring(const ScoringInfoV01 &info)
 	StreamData((char *)&info.mNumRedLights, sizeof(byte));
 
 	// scoring data (changes with new sector times)
-	for (long i = 0; i < info.mNumVehicles; i++) {
+	for(long i = 0; i < info.mNumVehicles; i++) {
 		VehicleScoringInfoV01 &vinfo = info.mVehicle[i];
 		StreamData((char *)&vinfo.mPos.x, sizeof(double));
 		StreamData((char *)&vinfo.mPos.z, sizeof(double));
@@ -308,11 +358,11 @@ void DataPlugin::UpdateTelemetry(const TelemInfoV01 &info)
 	StreamData((char *)&info.mLastImpactPos.x, sizeof(double));
 	StreamData((char *)&info.mLastImpactPos.y, sizeof(double));
 	StreamData((char *)&info.mLastImpactPos.z, sizeof(double));
-	for (long i = 0; i < 8; i++) {
+	for(long i = 0; i < 8; i++) {
 		StreamData((char *)&info.mDentSeverity[i], sizeof(byte));
 	}
 
-	for (long i = 0; i < 4; i++) {
+	for(long i = 0; i < 4; i++) {
 		const TelemWheelV01 &wheel = info.mWheel[i];
 		StreamData((char *)&wheel.mDetached, sizeof(bool));
 		StreamData((char *)&wheel.mFlat, sizeof(bool));
@@ -359,9 +409,9 @@ void DataPlugin::StartStream() {
 void DataPlugin::StreamData(char *data_ptr, int length) {
 	int i;
 
-	for (i = 0; i < length; i++) {
-		if (data_offset + i == MAX_PACKET_LEN) {
-			sendto(s, data, MAX_PACKET_LEN, 0, (struct sockaddr *) &sad, sizeof(struct sockaddr));
+	for(i = 0; i < length; i++) {
+		if(data_offset + i == MAX_PACKET_LEN) {
+			sendto(udp_s, data, MAX_PACKET_LEN, 0, (struct sockaddr *) &udp_sad, sizeof(struct sockaddr));
 			data_packet++;
 			data[0] = data_version;
 			data[1] = data_packet;
@@ -378,7 +428,7 @@ void DataPlugin::StreamData(char *data_ptr, int length) {
 
 void DataPlugin::StreamVarString(char *data_ptr) {
 	int i = 0;
-	while (data_ptr[i] != 0) {
+	while(data_ptr[i] != 0) {
 		i++;
 	}
 	StreamData((char *)&i, sizeof(int));
@@ -388,9 +438,9 @@ void DataPlugin::StreamVarString(char *data_ptr) {
 void DataPlugin::StreamString(char *data_ptr, int length) {
 	int i;
 
-	for (i = 0; i < length; i++) {
-		if (data_offset + i == MAX_PACKET_LEN) {
-			sendto(s, data, MAX_PACKET_LEN, 0, (struct sockaddr *) &sad, sizeof(struct sockaddr));
+	for(i = 0; i < length; i++) {
+		if(data_offset + i == MAX_PACKET_LEN) {
+			sendto(udp_s, data, MAX_PACKET_LEN, 0, (struct sockaddr *) &udp_sad, sizeof(struct sockaddr));
 			data_packet++;
 			data[0] = data_version;
 			data[1] = data_packet;
@@ -401,7 +451,7 @@ void DataPlugin::StreamString(char *data_ptr, int length) {
 			i = 0;
 		}
 		data[data_offset + i] = data_ptr[i];
-		if (data_ptr[i] == 0) {
+		if(data_ptr[i] == 0) {
 			// found end of string, so this is where we stop
 			data_offset = data_offset + i + 1;
 			return;
@@ -411,7 +461,46 @@ void DataPlugin::StreamString(char *data_ptr, int length) {
 }
 
 void DataPlugin::EndStream() {
-	if (data_offset > 4) {
-		sendto(s, data, data_offset, 0, (struct sockaddr *) &sad, sizeof(struct sockaddr));
+	if(data_offset > 4) {
+		sendto(udp_s, data, data_offset, 0, (struct sockaddr *) &udp_sad, sizeof(struct sockaddr));
 	}
+}
+
+void DataPlugin::FindNewResult(char *name) {
+	WIN32_FIND_DATA data;
+	HANDLE hand = FindFirstFile(".\\UserData\\Log\\Results\\*.xml", &data);
+	//char resultsfile[29];
+
+	if(hand != INVALID_HANDLE_VALUE) {
+		do {
+			//log(data.cFileName);
+			strncpy_s(name, 29, (const char *) &data.cFileName, 29);
+		} while(FindNextFile(hand, &data));
+		FindClose(hand);
+	}
+	log(name);
+}
+
+/*void DataPlugin::FindNewResults() {
+	WIN32_FIND_DATA data;
+	HANDLE hand = FindFirstFile(".\\UserData\\Log\\Results\\*.xml", &data);
+
+	if(hand != INVALID_HANDLE_VALUE) {
+		do {
+			log(data.cFileName);
+		} while(FindNextFile(hand, &data));
+		FindClose(hand);
+	}
+}*/
+
+time_t DataPlugin::ParseResultsTime(char *name) {
+	struct tm t;
+	char s[9];
+	t.tm_year = atoi(name) - 1900;
+	t.tm_mon = atoi(name + 5) - 1;
+	t.tm_mday = atoi(name + 8);
+	t.tm_hour = atoi(name + 11);
+	t.tm_min = atoi(name + 14);
+	t.tm_sec = atoi(name + 17);
+	return mktime(&t);
 }
