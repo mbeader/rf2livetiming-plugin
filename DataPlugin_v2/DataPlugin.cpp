@@ -489,14 +489,14 @@ void DataPlugin::ReadResults(char *name) {
 	strncpy_s(path, 52, ".\\UserData\\Log\\Results\\0000_00_00_00_00_00-00R1.xml", 52);
 	strncpy_s(path+23, 29, name, 29);
 	if(fopen_s(&r, path, "rb") == 0) {
-		if(SendResults(&r))
+		if(SendResults(&r, name))
 			log("failed to send results file");
 		fclose(r);
 	} else
 		log("cannot open results file");
 }
 
-int DataPlugin::SendResults(FILE** r) {
+int DataPlugin::SendResults(FILE** r, char* name) {
 	char buf[TCP_PACKET_LEN];
 	size_t nread;
 	int nsent;
@@ -504,6 +504,11 @@ int DataPlugin::SendResults(FILE** r) {
 	if(connect(tcp_s, (struct sockaddr *) &tcp_sad, sizeof(struct sockaddr)))
 		return -1;
 	log("connection successful");
+	nsent = send(tcp_s, name, 29, 0);
+	if(nsent < 0)
+		return -2;
+	if(nsent < 29)
+		log("did not send all bytes");
 	while((nread = fread(buf, sizeof(char), TCP_PACKET_LEN, *r)) > 0) {
 		nsent = send(tcp_s, buf, (int) nread, 0);
 		if(nsent < 0)

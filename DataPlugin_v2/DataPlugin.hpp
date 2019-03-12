@@ -93,7 +93,7 @@ private:
 	void FindNewResult(char *name);
 	time_t ParseResultsTime(char *name);
 	void ReadResults(char *name);
-	int SendResults(FILE** r);
+	int SendResults(FILE** r, char* name);
 
 	SOCKET udp_s; // socket to send data to
 	struct sockaddr_in udp_sad;
