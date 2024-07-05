@@ -25,10 +25,10 @@ extern "C" __declspec(dllexport) unsigned __cdecl GetPluginObjectCount() { retur
 // get the plugin-info object used to create the plugin.
 extern "C" __declspec(dllexport) PluginObjectInfo* __cdecl GetPluginObjectInfo( const unsigned uIndex ) {
   switch(uIndex) {
-    case 0:
-      return  &g_PluginInfo;
-    default:
-      return 0;
+	case 0:
+	  return  &g_PluginInfo;
+	default:
+	  return 0;
   }
 }
 
@@ -104,6 +104,7 @@ void ExampleInternalsPlugin::Startup() {
 	FILE *settings;
 	data_version = 2;
 	last_check = 0;
+	char gamestring[4];
 	char portstring[10];
 	char iniip[16];
 	int localhost;
@@ -121,6 +122,19 @@ void ExampleInternalsPlugin::Startup() {
 	int err = fopen_s(&settings, "rf1livetiming.ini", "r");
 	if(err == 0) {
 		log("reading settings");
+		if(fscanf_s(settings, "GAME=\"%[^\"]\"\n", gamestring, _countof(gamestring)) != 1) {
+			log("could not read game, using default: rf1");
+		}
+		else if(strncmp(gamestring, "rf1\0", sizeof(gamestring)) == 0) {
+			log("rf1");
+		}
+		else if(strncmp(gamestring, "ams\0", sizeof(gamestring)) == 0) {
+			log("ams");
+			data_version = 3;
+		}
+		else {
+			log("unknown game, using default: rf1");
+		}
 		if(fscanf_s(settings, "USE LOCALHOST=\"%i\"\n", &localhost) != 1) {
 			log("could not read localhost flag, using default: 1");
 			localhost = 1;

@@ -135,7 +135,7 @@ class ExampleInternalsPlugin : public InternalsPluginV3
 	char empty[32];
 	char servername[32];
 	long serverip;
-	unsigned short serverport;
+	unsigned int serverport;
 };
 
 
