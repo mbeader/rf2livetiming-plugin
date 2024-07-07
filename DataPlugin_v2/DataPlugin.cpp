@@ -17,6 +17,8 @@
 #define TIME_LENGTH 26
 #define MAX_PACKET_LEN 32768
 #define TCP_PACKET_LEN 512
+#define PACKET_CONTINUE 0
+#define PACKET_END 1
 
 
 DataPlugin::DataPlugin()
@@ -392,7 +394,8 @@ void DataPlugin::StreamData(char *data_ptr, int length) {
 	int i;
 
 	for(i = 0; i < length; i++) {
-		if(data_offset + i == MAX_PACKET_LEN) {
+		if(data_offset + i == MAX_PACKET_LEN - 1) {
+			data[MAX_PACKET_LEN - 1] = PACKET_CONTINUE;
 			sendto(udp_s, data, MAX_PACKET_LEN, 0, (struct sockaddr *) &udp_sad, sizeof(struct sockaddr));
 			data_packet++;
 			data[0] = data_version;
@@ -421,7 +424,8 @@ void DataPlugin::StreamString(char *data_ptr, int length) {
 	int i;
 
 	for(i = 0; i < length; i++) {
-		if(data_offset + i == MAX_PACKET_LEN) {
+		if(data_offset + i == MAX_PACKET_LEN - 1) {
+			data[MAX_PACKET_LEN - 1] = PACKET_CONTINUE;
 			sendto(udp_s, data, MAX_PACKET_LEN, 0, (struct sockaddr *) &udp_sad, sizeof(struct sockaddr));
 			data_packet++;
 			data[0] = data_version;
@@ -443,9 +447,8 @@ void DataPlugin::StreamString(char *data_ptr, int length) {
 }
 
 void DataPlugin::EndStream() {
-	if(data_offset > 4) {
-		sendto(udp_s, data, data_offset, 0, (struct sockaddr *) &udp_sad, sizeof(struct sockaddr));
-	}
+	data[data_offset] = PACKET_END;
+	sendto(udp_s, data, data_offset + 1, 0, (struct sockaddr *) &udp_sad, sizeof(struct sockaddr));
 }
 
 void DataPlugin::FindNewResult(char *name) {
