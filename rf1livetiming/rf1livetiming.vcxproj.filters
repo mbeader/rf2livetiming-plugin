@@ -15,18 +15,18 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\Source\DataPlugin.cpp">
+    <ClCompile Include="DataPlugin.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\Include\DataPlugin.hpp">
+    <ClInclude Include="DataPlugin.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\Include\InternalsPlugin.hpp">
+    <ClInclude Include="InternalsPlugin.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\Include\RFPluginObjects.hpp">
+    <ClInclude Include="RFPluginObjects.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

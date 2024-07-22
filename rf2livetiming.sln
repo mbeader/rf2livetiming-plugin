@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.168
+# Visual Studio Version 17
+VisualStudioVersion = 17.10.35013.160
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "rf2livetiming", "DataPlugin_v2\DataPlugin_v2.vcxproj", "{2A617FFD-25D8-43E1-9984-67678E19A38C}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "rf2livetiming", "rf2livetiming\rf2livetiming.vcxproj", "{2A617FFD-25D8-43E1-9984-67678E19A38C}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "rf1livetiming", "rf1livetiming\rf1livetiming.vcxproj", "{D0C09F9B-E1D6-4A04-B698-190F52BBA156}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -22,6 +24,14 @@ Global
 		{2A617FFD-25D8-43E1-9984-67678E19A38C}.Release|Win32.Build.0 = Release|Win32
 		{2A617FFD-25D8-43E1-9984-67678E19A38C}.Release|x64.ActiveCfg = Release|x64
 		{2A617FFD-25D8-43E1-9984-67678E19A38C}.Release|x64.Build.0 = Release|x64
+		{D0C09F9B-E1D6-4A04-B698-190F52BBA156}.Debug|Win32.ActiveCfg = Debug|Win32
+		{D0C09F9B-E1D6-4A04-B698-190F52BBA156}.Debug|Win32.Build.0 = Debug|Win32
+		{D0C09F9B-E1D6-4A04-B698-190F52BBA156}.Debug|x64.ActiveCfg = Debug|Win32
+		{D0C09F9B-E1D6-4A04-B698-190F52BBA156}.Debug|x64.Build.0 = Debug|Win32
+		{D0C09F9B-E1D6-4A04-B698-190F52BBA156}.Release|Win32.ActiveCfg = Release|Win32
+		{D0C09F9B-E1D6-4A04-B698-190F52BBA156}.Release|Win32.Build.0 = Release|Win32
+		{D0C09F9B-E1D6-4A04-B698-190F52BBA156}.Release|x64.ActiveCfg = Release|Win32
+		{D0C09F9B-E1D6-4A04-B698-190F52BBA156}.Release|x64.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
