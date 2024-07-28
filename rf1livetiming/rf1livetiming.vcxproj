@@ -158,7 +158,11 @@
   <ItemGroup>
     <ClInclude Include="DataPlugin.hpp" />
     <ClInclude Include="InternalsPlugin.hpp" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="RFPluginObjects.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="rf1livetiming.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

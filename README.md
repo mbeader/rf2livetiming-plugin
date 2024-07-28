@@ -50,3 +50,4 @@ SERVER PORT="55143" // port server is listening on
 
 * rf2livetiming.dll supports 64-bit rFactor 2
 * rf1livetiming.dll supports last versions of rFactor and Automobilista
+* Tested on Windows 10 and Windows Server 2012 R2
