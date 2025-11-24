@@ -29,8 +29,9 @@ DEST PORT="6789" // port rf2livetiming is listening on
 * Start the rF1/AMS dedicated server
 * Logs to `UserData\Log\rf1livetiming.log`
 
-### rf2livetiming.ini
+### rf1livetiming.ini
 ```
+GAME="rf1" // rf1, ams
 USE LOCALHOST="0" // 0=use IP, 1=use destination as localhost
 DEST IP="127.0.0.1" // location of rf1livetiming, ignored if USE LOCALHOST is set to 1
 DEST PORT="6789" // port rf1livetiming is listening on
